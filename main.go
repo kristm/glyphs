@@ -71,8 +71,7 @@ func main() {
 		rows := make([]string, len(allChars))
 
 		for i := 0; i < len(allChars); i++ {
-			formattedChars := renderGlyphs(allChars[i])
-			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, formattedChars...)
+			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(allChars[i])...)
 		}
 
 		okButton := buttonStyle.Render("Ok")
