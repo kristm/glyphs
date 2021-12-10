@@ -14,10 +14,10 @@ const (
 )
 
 var (
-	uppercase = [...]string{"Á,À,Â,Ã,Ä,Å", "Ç", "É,È,Ê,Ë", "Í,Ì,Î,Ï", "Ñ", "Ó,Ò,Ô,Õ,Ö", "Ú,Ù,Û,Ü"}
-	lowercase = [...]string{"á,à,â,ã,ä,å", "ç", "é,è,ê,ë", "í,ì,î,ï", "ñ", "ó,ò,ô,õ,ö", "ú,ù,û,ü"}
-	symbols   = [...]string{"$,₱,€,¥,£,¢", "¡,¿", "“", "°", "•", "‰", "©,®", "‹,›,×, «,»", "Æ,Œ,æ,œ,ß,§"}
-	latinx    = [...]string{"Ø,Ý,Ÿ,Š", "ø,ý,ÿ,š,ž"}
+	uppercase = []string{"Á,À,Â,Ã,Ä,Å", "Ç", "É,È,Ê,Ë", "Í,Ì,Î,Ï", "Ñ", "Ó,Ò,Ô,Õ,Ö", "Ú,Ù,Û,Ü"}
+	lowercase = []string{"á,à,â,ã,ä,å", "ç", "é,è,ê,ë", "í,ì,î,ï", "ñ", "ó,ò,ô,õ,ö", "ú,ù,û,ü"}
+	symbols   = []string{"$,₱,€,¥,£,¢", "¡,¿", "“", "°", "•", "‰", "©,®", "‹,›,×, «,»", "Æ,Œ,æ,œ,ß,§"}
+	latinx    = []string{"Ø,Ý,Ÿ,Š", "ø,ý,ÿ,š,ž"}
 
 	subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
@@ -52,40 +52,31 @@ var (
 	docStyle = lipgloss.NewStyle().Padding(1, 2, 1, 2)
 )
 
+func renderGlyphs(glyphs []string) []string {
+	formattedGlyphs := make([]string, 0)
+	for i := 0; i < len(glyphs); i++ {
+		formattedGlyphs = append(formattedGlyphs, textStyle.Render(glyphs[i]))
+	}
+	return formattedGlyphs
+}
+
 func main() {
 	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
-	{
-	}
 
 	{
 		title := titleStyle.Width(physicalWidth / 3).Render("GLYPHS")
-		glyphs1 := make([]string, 0)
-		for i := 0; i < len(uppercase); i++ {
-			glyphs1 = append(glyphs1, textStyle.Render(uppercase[i]))
+
+		allChars := [][]string{uppercase, lowercase, symbols, latinx}
+		rows := make([]string, len(allChars))
+
+		for i := 0; i < len(allChars); i++ {
+			formattedChars := renderGlyphs(allChars[i])
+			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, formattedChars...)
 		}
 
-		glyphs2 := make([]string, 0)
-		for i := 0; i < len(lowercase); i++ {
-			glyphs2 = append(glyphs2, textStyle.Render(lowercase[i]))
-		}
-
-		glyphs3 := make([]string, 0)
-		for i := 0; i < len(symbols); i++ {
-			glyphs3 = append(glyphs3, textStyle.Render(symbols[i]))
-		}
-
-		glyphs4 := make([]string, 0)
-		for i := 0; i < len(latinx); i++ {
-			glyphs4 = append(glyphs4, textStyle.Render(latinx[i]))
-		}
-
-		body1 := lipgloss.JoinHorizontal(lipgloss.Center, glyphs1...)
-		body2 := lipgloss.JoinHorizontal(lipgloss.Center, glyphs2...)
-		body3 := lipgloss.JoinHorizontal(lipgloss.Center, glyphs3...)
-		body4 := lipgloss.JoinHorizontal(lipgloss.Center, glyphs4...)
 		okButton := buttonStyle.Render("Ok")
-		body := lipgloss.JoinVertical(lipgloss.Center, body1, body2, body3, body4)
+		body := lipgloss.JoinVertical(lipgloss.Center, rows...)
 		buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton)
 		titleUi := lipgloss.JoinHorizontal(lipgloss.Center, title)
 		ui := lipgloss.JoinVertical(lipgloss.Center, body, buttons)
