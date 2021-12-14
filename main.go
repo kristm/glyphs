@@ -5,7 +5,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"os"
 	"strings"
-	//"github.com/lucasb-eyer/go-colorful"
 	"golang.org/x/term"
 )
 

@@ -9,3 +9,6 @@ ________________________________________________________________________________
 
 Extended latin character set cheatsheet  
 A must in any type designer's toolbox!
+
+
+<img src="glyphs.png" alt="Screenshot" />
