@@ -3,20 +3,95 @@ package main
 import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 	"os"
 	"strings"
-	"golang.org/x/term"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 const (
 	width = 96
 )
 
+type model struct {
+	cursor   int
+	sections []string
+	selected int
+}
+
+func initialModel() model {
+	return model{
+		sections: []string{"Basic Accented", "Basic Latin", "Latin-1 Supplement"},
+		selected: 0,
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		}
+	}
+
+	return m, nil
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 var (
 	uppercase = []string{"Á,À,Â,Ã,Ä,Å", "Ç,Č,Ć", "Đ", "É,È,Ê,Ë", "Í,Ì,Î,Ï", "Ñ", "Ó,Ò,Ô,Õ,Ö", "Ú,Ù,Û,Ü"}
 	lowercase = []string{"á,à,â,ã,ä,å", "ç,č,ć", "đ", "é,è,ê,ë", "í,ì,î,ï", "ñ", "ó,ò,ô,õ,ö", "ú,ù,û,ü"}
 	symbols   = []string{"$,₱,€,¥,£,¢", "¡,¿", "“", "°", "•", "‰", "©,®", "‹,›,×, «,»", "Æ,Œ,æ,œ,ß,§"}
 	latinx    = []string{"Ø,Ý,Ÿ,Š,Ž", "ø,ý,ÿ,š,ž"}
+
+	highlight = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
+	// Tabs.
+
+	activeTabBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      " ",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "┘",
+		BottomRight: "└",
+	}
+
+	tabBorder = lipgloss.Border{
+		Top:         "─",
+		Bottom:      "─",
+		Left:        "│",
+		Right:       "│",
+		TopLeft:     "╭",
+		TopRight:    "╮",
+		BottomLeft:  "┴",
+		BottomRight: "┴",
+	}
+
+	tab = lipgloss.NewStyle().
+		Border(tabBorder, true).
+		BorderForeground(highlight).
+		Padding(0, 1)
+
+	activeTab = tab.Copy().Border(activeTabBorder, true)
+
+	tabGap = tab.Copy().
+		BorderTop(false).
+		BorderLeft(false).
+		BorderRight(false)
 
 	subtle = lipgloss.AdaptiveColor{Light: "#D9DCCF", Dark: "#383838"}
 
@@ -59,9 +134,23 @@ func renderGlyphs(glyphs []string) []string {
 	return formattedGlyphs
 }
 
-func main() {
+func (m model) View() string {
 	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
+
+	// Tabs
+	// get model.selected to determine activeTab
+	{
+		row := lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			activeTab.Render("Basic Accented"),
+			tab.Render("Basic Latin"),
+			tab.Render("Latin-1 Supplement"),
+		)
+		gap := tabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
+		row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
+		doc.WriteString(row + "\n\n")
+	}
 
 	{
 		title := titleStyle.Width(physicalWidth / 3).Render("GLYPHS")
@@ -93,5 +182,13 @@ func main() {
 		docStyle = docStyle.MaxWidth(physicalWidth)
 	}
 
-	fmt.Println(docStyle.Render(doc.String()))
+	return docStyle.Render(doc.String())
+}
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	if err := p.Start(); err != nil {
+		fmt.Printf("セバエラー")
+		os.Exit(1)
+	}
 }
