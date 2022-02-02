@@ -14,6 +14,16 @@ const (
 	width = 96
 )
 
+type Glyphs struct {
+	glyphs []string
+}
+
+type Chars struct {
+	basicAccented   []Glyphs
+	basicLatin      []Glyphs
+	latinSupplement []Glyphs
+}
+
 type model struct {
 	cursor   int
 	sections []string
@@ -155,12 +165,18 @@ func (m model) View() string {
 	{
 		title := titleStyle.Width(physicalWidth / 3).Render("GLYPHS")
 
-		allChars := [][]string{uppercase, lowercase, symbols, latinx}
-		rows := make([]string, len(allChars))
+		upcase := Glyphs{glyphs: uppercase}
+		downcase := Glyphs{glyphs: lowercase}
+		syms := Glyphs{glyphs: symbols}
+		latin := Glyphs{glyphs: latinx}
+		basicSet := []Glyphs{upcase, downcase, syms, latin}
+		charset := Chars{basicSet, nil, nil}
+		rows := make([]string, len(charset.basicAccented))
 
-		for i := 0; i < len(allChars); i++ {
-			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(allChars[i])...)
+		for i := 0; i < len(rows); i++ {
+			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(charset.basicAccented[i].glyphs)...)
 		}
+		//fmt.Printf("chars %v %d", charset.basicAccented[1].glyphs, len(rows))
 
 		okButton := buttonStyle.Render("Ok")
 		body := lipgloss.JoinVertical(lipgloss.Center, rows...)
