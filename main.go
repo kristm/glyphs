@@ -25,15 +25,15 @@ type Chars struct {
 }
 
 type model struct {
-	cursor   int
-	sections []string
 	selected int
+	sections []string
+	cursor   int
 }
 
 func initialModel() model {
 	return model{
-		sections: []string{"Basic Accented", "Basic Latin", "Latin-1 Supplement"},
 		selected: 0,
+		sections: []string{"Basic Accented", "Basic Latin", "Latin-1 Supplement"},
 	}
 }
 
@@ -45,6 +45,19 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		case "right":
+			if m.selected < 2 {
+				m.selected += 1
+			} else {
+				m.selected = 0
+			}
+		case "left":
+			if m.selected > 0 {
+				m.selected -= 1
+			} else {
+				m.selected = 2
+			}
+
 		case "ctrl+c", "q":
 			return m, tea.Quit
 		}
@@ -147,18 +160,37 @@ func renderGlyphs(glyphs []string) []string {
 func (m model) View() string {
 	physicalWidth, _, _ := term.GetSize(int(os.Stdout.Fd()))
 	doc := strings.Builder{}
+	var tabrow string
+	var row string
 
 	// Tabs
 	// get model.selected to determine activeTab
 	{
-		row := lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Basic Accented"),
-			tab.Render("Basic Latin"),
-			tab.Render("Latin-1 Supplement"),
-		)
+		switch m.selected {
+		case 1:
+			tabrow = lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				tab.Render("Basic Accented"),
+				activeTab.Render("Basic Latin"),
+				tab.Render("Latin-1 Supplement"),
+			)
+		case 2:
+			tabrow = lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				tab.Render("Basic Accented"),
+				tab.Render("Basic Latin"),
+				activeTab.Render("Latin-1 Supplement"),
+			)
+		default:
+			tabrow = lipgloss.JoinHorizontal(
+				lipgloss.Top,
+				activeTab.Render("Basic Accented"),
+				tab.Render("Basic Latin"),
+				tab.Render("Latin-1 Supplement"),
+			)
+		}
 		gap := tabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
-		row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
+		row = lipgloss.JoinHorizontal(lipgloss.Bottom, tabrow, gap)
 		doc.WriteString(row + "\n\n")
 	}
 
@@ -176,7 +208,6 @@ func (m model) View() string {
 		for i := 0; i < len(rows); i++ {
 			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(charset.basicAccented[i].glyphs)...)
 		}
-		//fmt.Printf("chars %v %d", charset.basicAccented[1].glyphs, len(rows))
 
 		okButton := buttonStyle.Render("Ok")
 		body := lipgloss.JoinVertical(lipgloss.Center, rows...)
