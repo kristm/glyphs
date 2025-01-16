@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/charmbracelet/lipgloss"
-	"golang.org/x/term"
 	"os"
 	"strings"
+
+	"github.com/charmbracelet/lipgloss"
+	"golang.org/x/term"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -47,6 +48,18 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "ctrl+c", "q":
 			return m, tea.Quit
+		case "left", "<":
+			if m.cursor > 0 {
+				m.cursor--
+			} else {
+				m.cursor = len(m.sections) - 1
+			}
+		case "right", ">":
+			if m.cursor < len(m.sections)-1 {
+				m.cursor++
+			} else {
+				m.cursor = 0
+			}
 		}
 	}
 
@@ -151,15 +164,28 @@ func (m model) View() string {
 	// Tabs
 	// get model.selected to determine activeTab
 	{
-		row := lipgloss.JoinHorizontal(
+		var nav [3]string
+		for i, menuItem := range m.sections {
+			if m.cursor == i {
+				nav[i] = activeTab.Render(menuItem)
+			} else {
+				nav[i] = tab.Render(menuItem)
+			}
+		}
+		//log.Printf(">> %s ", nav)
+		/*row := lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			activeTab.Render("Basic Accented"),
 			tab.Render("Basic Latin"),
 			tab.Render("Latin-1 Supplement"),
+		)*/
+		row := lipgloss.JoinHorizontal(
+			lipgloss.Top, nav[0], nav[1], nav[2],
 		)
 		gap := tabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
 		row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
-		doc.WriteString(row + "\n\n")
+		//log.Printf("Row %s ", row)
+		doc.WriteString(row)
 	}
 
 	{
