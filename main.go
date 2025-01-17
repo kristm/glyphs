@@ -78,6 +78,7 @@ var (
 	lowercase = []string{"á,à,â,ã,ä,å", "ç,č,ć", "đ", "é,è,ê,ë", "í,ì,î,ï", "ñ", "ó,ò,ô,õ,ö", "ú,ù,û,ü"}
 	symbols   = []string{"$,₱,€,¥,£,¢", "¡,¿", "“", "°", "•", "‰", "©,®", "‹,›,×, «,»", "Æ,Œ,æ,œ,ß,§"}
 	latinx    = []string{"Ø,Ý,Ÿ,Š,Ž", "ø,ý,ÿ,š,ž"}
+	symx      = []string{"¤,¦,¨,ª,¬,¯", "°,±,´,µ,¶,·,¸", "¹,²,³,º,¼,½,¾"}
 
 	highlight = lipgloss.AdaptiveColor{Light: "#874BFD", Dark: "#7D56F4"}
 	// Tabs.
@@ -172,19 +173,11 @@ func (m model) View() string {
 				nav[i] = tab.Render(menuItem)
 			}
 		}
-		//log.Printf(">> %s ", nav)
-		/*row := lipgloss.JoinHorizontal(
-			lipgloss.Top,
-			activeTab.Render("Basic Accented"),
-			tab.Render("Basic Latin"),
-			tab.Render("Latin-1 Supplement"),
-		)*/
 		row := lipgloss.JoinHorizontal(
 			lipgloss.Top, nav[0], nav[1], nav[2],
 		)
 		gap := tabGap.Render(strings.Repeat(" ", max(0, width-lipgloss.Width(row)-2)))
 		row = lipgloss.JoinHorizontal(lipgloss.Bottom, row, gap)
-		//log.Printf("Row %s ", row)
 		doc.WriteString(row)
 	}
 
@@ -195,14 +188,16 @@ func (m model) View() string {
 		downcase := Glyphs{glyphs: lowercase}
 		syms := Glyphs{glyphs: symbols}
 		latin := Glyphs{glyphs: latinx}
-		basicSet := []Glyphs{upcase, downcase, syms, latin}
-		charset := Chars{basicSet, nil, nil}
-		rows := make([]string, len(charset.basicAccented))
+		latin2 := Glyphs{glyphs: symx}
+		var charData [3][]Glyphs
+		charData[0] = []Glyphs{upcase, downcase}
+		charData[1] = []Glyphs{syms}
+		charData[2] = []Glyphs{latin, latin2}
+		rows := make([]string, len(charData[m.cursor]))
 
 		for i := 0; i < len(rows); i++ {
-			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(charset.basicAccented[i].glyphs)...)
+			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(charData[m.cursor][i].glyphs)...)
 		}
-		//fmt.Printf("chars %v %d", charset.basicAccented[1].glyphs, len(rows))
 
 		okButton := buttonStyle.Render("Ok")
 		body := lipgloss.JoinVertical(lipgloss.Center, rows...)
