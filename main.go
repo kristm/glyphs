@@ -46,7 +46,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
+		case "ctrl+c", "q", "esc":
 			return m, tea.Quit
 		case "left", "<":
 			if m.cursor > 0 {
@@ -54,7 +54,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			} else {
 				m.cursor = len(m.sections) - 1
 			}
-		case "right", ">":
+		case "right", "tab", ">":
 			if m.cursor < len(m.sections)-1 {
 				m.cursor++
 			} else {
