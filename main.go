@@ -141,11 +141,11 @@ var (
 			BorderLeft(true).
 			BorderRight(true).
 			BorderBottom(true)
-	buttonStyle = lipgloss.NewStyle().
+	infoStyle = lipgloss.NewStyle().
 			Foreground(lipgloss.Color("#FFF7DB")).
-			Background(lipgloss.Color("#888B7E")).
 			Padding(0, 3).
-			MarginTop(1)
+			MarginTop(1).
+			Align(lipgloss.Center)
 
 	docStyle = lipgloss.NewStyle().Padding(1, 2, 1, 2)
 )
@@ -183,6 +183,7 @@ func (m model) View() string {
 
 	{
 		title := titleStyle.Width(physicalWidth / 3).Render("GLYPHS")
+		info := infoStyle.Width(physicalWidth / 3).Render("Tab to select | Esc to quit")
 
 		upcase := Glyphs{glyphs: uppercase}
 		downcase := Glyphs{glyphs: lowercase}
@@ -199,25 +200,29 @@ func (m model) View() string {
 			rows[i] = lipgloss.JoinHorizontal(lipgloss.Center, renderGlyphs(charData[m.cursor][i].glyphs)...)
 		}
 
-		okButton := buttonStyle.Render("Ok")
 		body := lipgloss.JoinVertical(lipgloss.Center, rows...)
-		buttons := lipgloss.JoinHorizontal(lipgloss.Top, okButton)
+		infoMsg := lipgloss.JoinHorizontal(lipgloss.Center, info)
 		titleUi := lipgloss.JoinHorizontal(lipgloss.Center, title)
-		ui := lipgloss.JoinVertical(lipgloss.Center, body, buttons)
+		ui := lipgloss.JoinVertical(lipgloss.Center, body)
 		view := lipgloss.JoinVertical(lipgloss.Center, titleUi, ui)
+		dialogBody := dialogBoxStyle.Render(view)
+		content := lipgloss.JoinVertical(lipgloss.Top, infoMsg, dialogBody)
 
-		dialog := lipgloss.Place(width, 9,
+		dialog := lipgloss.Place(width, 15,
 			lipgloss.Center, lipgloss.Center,
-			dialogBoxStyle.Render(view),
+			content,
 			lipgloss.WithWhitespaceChars("猫咪"),
 			lipgloss.WithWhitespaceForeground(subtle),
 		)
 		doc.WriteString(dialog + "\n\n")
 	}
 
-	if physicalWidth > 0 {
-		docStyle = docStyle.MaxWidth(physicalWidth)
-	}
+	//if physicalWidth > 0 {
+	//	docStyle = docStyle.MaxWidth(physicalWidth)
+	//}
+	//if physicalHeight > 0 {
+	//	docStyle = docStyle.MaxHeight(physicalHeight)
+	//}
 
 	return docStyle.Render(doc.String())
 }
